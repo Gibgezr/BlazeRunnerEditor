@@ -4,5 +4,6 @@
 
 class FloorTile : public baseTile
 {
+public:
 	FloorTile();
 };

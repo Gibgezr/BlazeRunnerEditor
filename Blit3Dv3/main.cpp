@@ -16,42 +16,61 @@
 #include "Blit3D.h"
 
 #include "map.h"
+#include "Floor.h"
 
 Blit3D *blit3D = NULL;
 
 //GLOBAL DATA
-Sprite *backgroundSprite = NULL; //a pointer to a background sprite
-Sprite *heartSprite = NULL;		//a pointer to a heart-shaped sprite
-float angle = 0; //for rotating the hearts
+//mouse coordinates
+float mx = 0, my = 0;
 
 TileMap* tileMap;
+
+int editTileNum = 1;
+
+Sprite* hdoorSprite;
+Sprite* spaceSprite;
+Sprite* floorSprite;
 
 void Init()
 {
 	tileMap = new TileMap();
 
-	Sprite* hdoor = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Close.png");
+	hdoorSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Close.png");
+	spaceSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Close.png");
+	floorSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Close.png");
 
 	//tileMap.LoadLevel("level1.txt");
+
+	for (int y = 0; y < MAPHEIGHT; ++y)
+		for (int x = 0; x < MAPWIDTH; ++x)
+		{
+			tileMap->theMap[x][y] = new FloorTile;
+			tileMap->theMap[x][y]->tileID = TileType::FLOOR;
+		}
+
 	for(int y = 0; y < MAPHEIGHT; ++y)
 		for (int x = 0; x < MAPWIDTH; ++x)
 		{
 			switch (tileMap->theMap[x][y]->tileID)
 			{
 			case TileType::DOORH:
-				tileMap->theMap[x][y]->sprite = hdoor;
+				tileMap->theMap[x][y]->sprite = hdoorSprite;
 				break;
 
+			case TileType::SPACE:
+				tileMap->theMap[x][y]->sprite = spaceSprite;
+				break;
+
+			case TileType::FLOOR:
+				tileMap->theMap[x][y]->sprite = floorSprite;
+				break;
 
 			default:
 				assert(false && "Unknown tile id!");
 				break;
 			}
 		}
-
-	tileMap->flame.spriteList.push_back(hdoor);
-	tileMap->flame.spriteList.push_back(hdoor);
-	tileMap->flame.spriteList.push_back(hdoor);
 }
 
 void DeInit(void)
@@ -62,10 +81,6 @@ void DeInit(void)
 
 void Update(double seconds)
 {
-	//change the angle variable based on time passed since last update
-	angle += static_cast<float>(seconds) * 45.f;
-	if (angle > 360.f) angle -= 360.f;
-
 	tileMap->Update((float)seconds);
 }
 
@@ -77,6 +92,21 @@ void Draw(void)
 
 	//draw stuff here
 	tileMap->Draw();
+
+	switch (editTileNum)
+	{
+	case (int)TileType::SPACE:
+		spaceSprite->Blit(mx, my);
+		break;
+
+	case (int)TileType::DOORH:
+		hdoorSprite->Blit(mx, my);
+		break;
+
+	case (int)TileType::FLOOR:
+		floorSprite->Blit(mx, my);
+		break;
+	}
 	
 }
 
@@ -86,6 +116,82 @@ void DoInput(int key, int scancode, int action, int mods)
 	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		blit3D->Quit(); //start the shutdown sequence
 }
+
+void DoCursor(double x, double y)
+{
+	mx = (float)x;
+	my = blit3D->trueScreenHeight - (float)y; //invert y for Blit3D screen coords
+
+											  //scale, in case screen resolution does not match our mode
+	mx = mx * (blit3D->screenWidth / blit3D->trueScreenWidth);
+	my = my * (blit3D->screenHeight / blit3D->trueScreenHeight);
+}
+
+void DoMouseButton(int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		
+	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+	{
+		int x = mx / TILESIZE;
+		int y = (1080 - 25 - my) / TILESIZE;
+		editTileNum = (int)tileMap->theMap[x][y]->tileID;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		int x = mx / TILESIZE;
+		int y = (1080 - 25 - my) / TILESIZE;
+
+		tileMap->theMap[x][y]->tileID = (TileType)editTileNum;
+
+		switch (tileMap->theMap[x][y]->tileID)
+		{
+		case TileType::DOORH:
+			tileMap->theMap[x][y]->sprite = hdoorSprite;
+			break;
+
+		case TileType::SPACE:
+			tileMap->theMap[x][y]->sprite = spaceSprite;
+			break;
+
+		case TileType::FLOOR:
+			tileMap->theMap[x][y]->sprite = floorSprite;
+			break;
+
+		default:
+			assert(false && "Unknown tile id!");
+			break;
+		}
+	}
+	
+}
+
+void DoScrollwheel(double xoffset, double yoffset)
+{
+	//A simple mouse wheel, being vertical, provides offsets along the Y-axis.
+	if (yoffset > 0)
+	{
+		//scrolled up
+		editTileNum++;
+		if (editTileNum >= (int)TileType::ENDOFLIST)
+			editTileNum = (int)TileType::BASE + 1;
+		
+	}
+	else if (yoffset < 0)
+	{
+		//scrolled down
+		editTileNum--;	
+		if (editTileNum <= (int)TileType::BASE)
+			editTileNum = (int)TileType::BASE + 1;
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -104,6 +210,10 @@ int main(int argc, char *argv[])
 	blit3D->SetUpdate(Update);
 	blit3D->SetDraw(Draw);
 	blit3D->SetDoInput(DoInput);
+
+	blit3D->SetDoCursor(DoCursor);
+	blit3D->SetDoMouseButton(DoMouseButton);
+	blit3D->SetDoScrollwheel(DoScrollwheel);
 
 	//Run() blocks until the window is closed
 	blit3D->Run(Blit3DThreadModel::SINGLETHREADED);

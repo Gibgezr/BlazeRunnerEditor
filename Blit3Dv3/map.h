@@ -3,7 +3,7 @@
 #include "Flame.h"
 #include<string>
 
-enum class TileType {BASE, SPACE, FLOOR, WALL, DOORH, DOORV, VENT, EXIT};
+enum class TileType {BASE, SPACE, FLOOR, WALL, DOORH, DOORV, VENT, EXIT, ENDOFLIST};
 
 #define MAPWIDTH 30
 #define MAPHEIGHT 16
@@ -35,4 +35,5 @@ public:
 	bool SpreadFire(); //returns true if player dies
 	bool LoadLevel(std::string filename); //returns false if it can't load the file
 	void SaveLevel(std::string filename);
+	~TileMap();
 };

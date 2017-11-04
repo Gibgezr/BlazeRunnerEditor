@@ -60,3 +60,17 @@ void TileMap::SaveLevel(std::string filename)
 {
 
 }
+
+TileMap::~TileMap()
+{
+	if (theMap[0][0] != NULL)
+	{
+		for (int y = 0; y < MAPHEIGHT; ++y)
+		{
+			for (int x = 0; x < MAPWIDTH; ++x)
+			{
+				delete theMap[x][y];
+			}
+		}
+	}
+}
