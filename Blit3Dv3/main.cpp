@@ -28,17 +28,41 @@ TileMap* tileMap;
 
 int editTileNum = 1;
 
-Sprite* hdoorSprite;
 Sprite* spaceSprite;
 Sprite* floorSprite;
+Sprite* wallSprite;
+Sprite* ventSprite;
+Sprite* exitSprite;
+
+Sprite* door_Red_V_Open_Sprite;
+Sprite* door_Red_V_Closed_Sprite;
+Sprite* door_Red_H_Open_Sprite;
+Sprite* door_Red_H_Closed_Sprite;
+
+Sprite* door_Blue_V_Open_Sprite;
+Sprite* door_Blue_V_Closed_Sprite;
+Sprite* door_Blue_H_Open_Sprite;
+Sprite* door_Blue_H_Closed_Sprite;
 
 void Init()
 {
 	tileMap = new TileMap();
 
-	hdoorSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Close.png");
-	spaceSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Close.png");
-	floorSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Close.png");
+	door_Blue_H_Closed_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Blue_Close-1.png");
+	door_Blue_H_Open_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Blue_Open.png");
+	door_Blue_V_Closed_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Blue_Close-1.png");
+	door_Blue_V_Open_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Blue_Open.png");
+
+	door_Red_H_Closed_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Red_Close-1.png");
+	door_Red_H_Open_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\H_Door_Red_Open.png");
+	door_Red_V_Closed_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Red_Close-1.png");
+	door_Red_V_Open_Sprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\V_Door_Red_Open.png");
+	
+	spaceSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\Space_Tile_A.png");
+	floorSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\Floor_Tile_Base.png");
+	wallSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\Wall_Tile_A.png");
+	ventSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\Vent_Tile_Glow.png");
+	exitSprite = blit3D->MakeSprite(0, 0, 64, 64, "Media\\Exit_Tile.png");
 
 	//tileMap.LoadLevel("level1.txt");
 
@@ -54,8 +78,37 @@ void Init()
 		{
 			switch (tileMap->theMap[x][y]->tileID)
 			{
-			case TileType::DOORH:
-				tileMap->theMap[x][y]->sprite = hdoorSprite;
+			case TileType::DOOR:
+			{
+				Door* door = (Door*)tileMap->theMap[x][y];
+
+				if (door->color == (int)DoorColor::RED)
+				{
+					if (door->orientation == (int)DoorOrientation::HOREZONTAL)
+					{
+						door->sprite = door_Red_H_Closed_Sprite;
+						door->open = door_Red_H_Open_Sprite;
+					}
+					else
+					{
+						door->sprite = door_Red_V_Closed_Sprite;
+						door->open = door_Red_V_Open_Sprite;
+					}
+				}
+				else
+				{
+					if (door->orientation == (int)DoorOrientation::HOREZONTAL)
+					{
+						door->sprite = door_Blue_H_Closed_Sprite;
+						door->open = door_Blue_H_Open_Sprite;
+					}
+					else
+					{
+						door->sprite = door_Blue_V_Closed_Sprite;
+						door->open = door_Blue_V_Open_Sprite;
+					}
+				}				
+			}
 				break;
 
 			case TileType::SPACE:
@@ -64,6 +117,18 @@ void Init()
 
 			case TileType::FLOOR:
 				tileMap->theMap[x][y]->sprite = floorSprite;
+				break;
+
+			case TileType::WALL:
+				tileMap->theMap[x][y]->sprite = wallSprite;
+				break;
+
+			case TileType::VENT:
+				tileMap->theMap[x][y]->sprite = ventSprite;
+				break;
+
+			case TileType::EXIT:
+				tileMap->theMap[x][y]->sprite = exitSprite;
 				break;
 
 			default:
@@ -93,18 +158,51 @@ void Draw(void)
 	//draw stuff here
 	tileMap->Draw();
 
+	int cx = (int)mx / TILESIZE * TILESIZE + TILESIZE/2;
+	int cy = 1080 - my;
+	cy -= 25;
+	cy = 1080 - ((int)cy / TILESIZE * TILESIZE + TILESIZE/2 + 25);
+
 	switch (editTileNum)
 	{
 	case (int)TileType::SPACE:
-		spaceSprite->Blit(mx, my);
-		break;
-
-	case (int)TileType::DOORH:
-		hdoorSprite->Blit(mx, my);
+		spaceSprite->Blit(cx, cy);
 		break;
 
 	case (int)TileType::FLOOR:
-		floorSprite->Blit(mx, my);
+		floorSprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::B_H_CLOSED:
+		door_Blue_H_Closed_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::B_H_OPEN:
+		door_Blue_H_Open_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::B_V_CLOSED:
+		door_Blue_V_Closed_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::B_V_OPEN:
+		door_Blue_V_Open_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::R_H_CLOSED:
+		door_Red_H_Closed_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::R_H_OPEN:
+		door_Red_H_Open_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::R_V_CLOSED:
+		door_Red_V_Closed_Sprite->Blit(cx, cy);
+		break;
+
+	case (int)DoorType::R_V_OPEN:
+		door_Red_V_Open_Sprite->Blit(cx, cy);
 		break;
 	}
 	
@@ -138,6 +236,11 @@ void DoMouseButton(int button, int action, int mods)
 		int x = mx / TILESIZE;
 		int y = (1080 - 25 - my) / TILESIZE;
 		editTileNum = (int)tileMap->theMap[x][y]->tileID;
+		if (editTileNum == (int)TileType::DOOR)
+		{
+			//Door* door = 
+			//if()
+		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
@@ -152,8 +255,8 @@ void DoMouseButton(int button, int action, int mods)
 
 		switch (tileMap->theMap[x][y]->tileID)
 		{
-		case TileType::DOORH:
-			tileMap->theMap[x][y]->sprite = hdoorSprite;
+		case TileType::DOOR:
+			//tileMap->theMap[x][y]->sprite = hdoorSprite;
 			break;
 
 		case TileType::SPACE:
@@ -179,7 +282,7 @@ void DoScrollwheel(double xoffset, double yoffset)
 	{
 		//scrolled up
 		editTileNum++;
-		if (editTileNum >= (int)TileType::ENDOFLIST)
+		if (editTileNum >= (int)TileType::END_ENUM)
 			editTileNum = (int)TileType::BASE + 1;
 		
 	}
