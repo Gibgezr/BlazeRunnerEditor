@@ -28,8 +28,8 @@ public:
 	void Update(float seconds); //updates animations for tiles and flame
 	bool SpreadFire(std::vector<Vent> vent); //returns true if player dies
 	bool isPlayerOnFlame(int nowX, int nowY);// return true if player is on fire
-	bool LoadLevel(std::string filename); //returns false if it can't load the file
-	void SaveLevel(std::string filename);
+	bool LoadLevel(std::string filename, int &playerX, int &playerY); //returns false if it can't load the file
+	void SaveLevel(std::string filename, int playerX, int playerY);
 
 	~TileMap();
 };

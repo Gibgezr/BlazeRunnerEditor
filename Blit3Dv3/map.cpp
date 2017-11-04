@@ -103,9 +103,8 @@ bool TileMap::isPlayerOnFlame(int nowX, int nowY)
 	return isOnFlame;
 }
 
-bool TileMap::LoadLevel(std::string filename)
+bool TileMap::LoadLevel(std::string filename, int &playerX, int &playerY)
 {
-	std::string row;
 	std::ifstream mapFile(filename);
 	if (mapFile.is_open())
 	{
@@ -181,12 +180,18 @@ bool TileMap::LoadLevel(std::string filename)
 				case (int)TileType::EXIT:
 					theMap[x][y] = new Exit();
 					break;
+				case (int)TileType::SPACE:
+					theMap[x][y] = new Space();
+					break;
 				default:
 					assert(0 && "Unknow tile? Really?");
 					break;
 				}
 			}
+
 		}
+		mapFile >> playerX;
+		mapFile >> playerY;
 		mapFile.close();
 	}
 
@@ -195,7 +200,7 @@ bool TileMap::LoadLevel(std::string filename)
 	return true; //successfully loaded map
 }
 
-void TileMap::SaveLevel(std::string filename)
+void TileMap::SaveLevel(std::string filename, int playerX, int playerY)
 {
 	std::ofstream mapFile(filename);
 	if (mapFile.is_open())
@@ -269,6 +274,7 @@ void TileMap::SaveLevel(std::string filename)
 			}
 			mapFile << '\n';
 		}
+		mapFile << playerX << " " << playerY;
 		mapFile.close();
 	}
 	else std::cout << "Unable to open file";
